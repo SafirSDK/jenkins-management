@@ -26,7 +26,7 @@ def slaveNodes() {
     }
 }
 pipeline {
-    agent any
+    agent {label 'admin'}
     stages {
         stage('slave stage') {
             steps {
