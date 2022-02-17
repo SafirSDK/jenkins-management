@@ -3,11 +3,9 @@ def slaveNodes() {
         // Get all slave nodes
         def axis = []
         for (slave in jenkins.model.Jenkins.instance.getNodes()) {
-            if (slave.toComputer().isOnline()) {
-                println("name: " + slave.getDisplayName())
-                println("labels: " + slave.labelString)
-                //axis[slave.getDisplayName()] =
-            }
+            println("name: " + slave.getDisplayName())
+            println("labels: " + slave.labelString)
+            //axis[slave.getDisplayName()] =
         }
         // Print all slave nodes
         /*
