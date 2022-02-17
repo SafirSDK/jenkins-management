@@ -1,0 +1,36 @@
+@Library('safir_shared_library') _
+
+pipeline {
+    agent none
+    stages {
+        stage ("Clean and Reboot"){
+            steps {
+                parallelRunOnNodes { nodeLabel ->
+                    checkout scm
+                    script {
+                        //The checkout gets the whole repo, so we need to provide the path relative the repo root.
+                        utils.runPython(command: "clean_and_reboot_slaves/clean_slave.py")
+
+                        //Reboot in 60 seconds
+                        if (utils.betterIsUnix()) {
+                            utils.runCommand(command: "sudo shutdown -r +1")
+                        }
+                        else {
+                            utils.runCommand(command: "shutdown -r -t 60")
+                        }
+
+                        utils.markNodeOffline(nodeLabel, "Rebooting")
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                sleep (180) //Nodes should be rebooting by now
+                utils.markAllNodesOnline()
+            }
+        }
+    }
+}
