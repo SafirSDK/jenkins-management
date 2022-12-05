@@ -51,6 +51,7 @@ class WindowsUninstaller():
         if pf86 is None:
             if installed:
                 self.uninstaller = uninstaller
+                self.uninstaller_path = ip
         else:
             ip86 = os.path.join(pf86, "Safir SDK Core")
             uninstaller86 = os.path.join(ip86, "Uninstall.exe")
