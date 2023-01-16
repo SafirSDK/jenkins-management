@@ -4,8 +4,11 @@ import os
 import sys
 import subprocess
 import warnings
-import psutil
 import re
+import shutil
+import stat
+import ctypes
+import psutil
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -152,10 +155,64 @@ def kill_safir_processes():
                     proc.kill()
 
 
+def delete_workspace():
+    def onerror(function, path, excinfo):
+        try:
+            # path contains the path of the file that couldn't be removed
+            # let's just assume that it's read-only and unlink it.
+            if os.path.isfile(path):
+                os.chmod(path, stat.S_IWUSR|stat.S_IRUSR)
+            os.unlink( path )
+            return
+        except Exception as e:
+            log(f"Caught exception in onerror: {e}")
+
+        #hmm, maybe the path is very long and we're on windows
+        try:
+            if sys.platform == "win32":
+                newpath = "\\\\?\\" + os.path.join(os.getcwd(),path)
+                os.chmod(newpath, stat.S_IWRITE)
+                os.unlink(newpath)
+                return
+        except Exception as e:
+            log(f"Caught exception in win32 part of onerror: {e}")
+
+        #ok, if we're on windows we can try to mark it for removal and reboot
+        if sys.platform == "win32":
+            log("Marking file for deletion on reboot:",path)
+            MOVEFILE_DELAY_UNTIL_REBOOT = 4
+            newpath = "\\\\?\\" + os.path.join(os.getcwd(),path)
+            ctypes.windll.kernel32.MoveFileExA(newpath, None,
+                                               MOVEFILE_DELAY_UNTIL_REBOOT)
+            return
+        raise SetupError(f"Failed to delete {path}")
+
+    workspace_dir = os.getcwd()
+    log(f"Workspace dir is {workspace_dir}")
+    if "workspace" not in workspace_dir:
+        raise SetupError("No 'workspace' in the path")
+    while "workspace" in workspace_dir:
+        workspace_dir = os.path.abspath(os.path.join(workspace_dir, os.pardir))
+    workspace_dir = os.path.join(workspace_dir, "workspace")
+    log(f"Will delete workspace directories in {workspace_dir}")
+    os.chdir(workspace_dir)
+    for ws_subdir in os.listdir("."):
+        if os.path.abspath(ws_subdir) in os.environ["WORKSPACE"] or \
+           os.path.abspath(ws_subdir) in os.environ["WORKSPACE_TMP"]:
+            log(f"Skipping directory '{ws_subdir}' in {workspace_dir}")
+            continue
+        if not os.path.isdir(ws_subdir):
+            log(f"Skipping file '{ws_subdir}' in {workspace_dir}")
+            continue
+        log(f"Deleting directory '{ws_subdir}' in {workspace_dir}")
+        shutil.rmtree(ws_subdir,onerror=onerror)
+
 def main():
     try:
+        log("--- Killing any leftover Safir processes ---")
         kill_safir_processes()
 
+        log("--- Uninstalling any leftover Safir installations ---")
         if sys.platform == "win32":
             uninstaller = WindowsUninstaller()
         elif sys.platform.startswith("linux") and \
@@ -166,6 +223,9 @@ def main():
             return 1
 
         uninstaller.uninstall()
+
+        log("--- Deleting workspaces ---")
+        delete_workspace()
 
     except SetupError as e:
         log("Error: " + str(e))
