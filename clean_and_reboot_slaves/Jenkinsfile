@@ -23,7 +23,7 @@ pipeline {
                             utils.runCommand(command: "pip install --user --upgrade websockets")
                             utils.runCommand(command: "conan remove --locks")
                             if (params.REMOVE_ALL_CONAN_PACKAGES) {
-                                utils.runCommand(command: "conan remove -f '*'")
+                                utils.runCommand(command: 'conan remove -f "*"')
                             }
                         }
 
