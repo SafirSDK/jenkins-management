@@ -22,14 +22,18 @@ pipeline {
                     script {
                         //run on only build slaves
                         if (nodeLabel.contains("-build")) {
-                            utils.runCommand(command: "conan remove --locks")
+                            utils.runPython(command: "conan remove --locks",
+                                            requirements: "clean_and_reboot_slaves/requirements.txt")
                             if (params.REMOVE_ALL_CONAN_PACKAGES) {
-                                utils.runCommand(command: 'conan remove -f "*"')
+                                utils.runPython(command: 'conan remove -f "*"',
+                                                requirements: "clean_and_reboot_slaves/requirements.txt")
+                                utils.runPython(command: 'conan remove -c "*/*"',
+                                                requirements: "clean_and_reboot_slaves/requirements2.txt")
                             }
                         }
 
                         //The checkout gets the whole repo, so we need to provide the path relative the repo root.
-                        utils.runPython(command: "clean_and_reboot_slaves/clean_slave.py",
+                        utils.runPython(script: "clean_and_reboot_slaves/clean_slave.py",
                                         requirements: "clean_and_reboot_slaves/requirements.txt")
 
                         //Reboot in 60 seconds

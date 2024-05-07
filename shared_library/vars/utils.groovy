@@ -20,7 +20,9 @@ def runCommand(Map map) {
 }
 
 def runPython(Map map) {
-    def command = map.command
+    def command = "python ${map.script}"
+    if (map.command != null)
+        command = map.command
     if (map.requirements != null) {
         if (betterIsUnix()) {
             if (map.linux_arguments != null)
@@ -31,7 +33,7 @@ def runPython(Map map) {
                        . .venv/bin/activate
                        python -m pip install --upgrade pip
                        python -m pip install -r ${map.requirements}
-                       python $command"""
+                       $command"""
         }
         else {
             command = command.replaceAll("/","\\\\")
@@ -43,11 +45,11 @@ def runPython(Map map) {
                         call .venv\\Scripts\\activate
                         python -m pip install --upgrade pip
                         python -m pip install -r ${map.requirements}
-                        python $command"""
+                        $command"""
         }
     }
     else {
-        map.command = "python " + map.command
+        map.command = command
         runCommand(map)
     }
 }
