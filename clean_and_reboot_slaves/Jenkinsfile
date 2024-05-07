@@ -27,14 +27,18 @@ pipeline {
                             if (params.REMOVE_ALL_CONAN_PACKAGES) {
                                 utils.runPython(command: 'conan remove -f "*"',
                                                 requirements: "clean_and_reboot_slaves/requirements.txt")
-                                utils.runPython(command: 'conan remove -c "*/*"',
-                                                requirements: "clean_and_reboot_slaves/requirements2.txt")
                             }
                         }
 
                         //The checkout gets the whole repo, so we need to provide the path relative the repo root.
                         utils.runPython(script: "clean_and_reboot_slaves/clean_slave.py",
                                         requirements: "clean_and_reboot_slaves/requirements.txt")
+
+                        //Remove conan2 packages (this has different requirements, so we do it after)
+                        if (nodeLabel.contains("-build") && params.REMOVE_ALL_CONAN_PACKAGES) {
+                                utils.runPython(command: 'conan remove -c "*/*"',
+                                                requirements: "clean_and_reboot_slaves/requirements2.txt")
+                        }
 
                         //Reboot in 60 seconds
                         if (utils.betterIsUnix()) {
