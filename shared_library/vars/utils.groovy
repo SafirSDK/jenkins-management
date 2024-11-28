@@ -36,7 +36,7 @@ def runPython(Map map) {
                        $command"""
         }
         else {
-            command = command.replaceAll("/","\\\\")
+            //command = command.replaceAll("/","\\\\")
             if (map.windows_arguments != null)
                 command = command + " " + map.windows_arguments
             bat label: "Running (through bat) " + command,
