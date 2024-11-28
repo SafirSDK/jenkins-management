@@ -12,7 +12,7 @@ def runCommand(Map map) {
         sh (script: command, label: "Running (through sh) " + command)
     }
     else {
-        command = command.replaceAll("/","\\\\")
+        //command = command.replaceAll("/","\\\\")
         if (map.windows_arguments != null)
             command = command + " " + map.windows_arguments
         bat (script: command, label: "Running (through bat) " + command)
