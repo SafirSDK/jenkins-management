@@ -36,8 +36,12 @@ pipeline {
 
                         //Remove conan2 packages (this has different requirements, so we do it after)
                         if (nodeLabel.contains("-build") && params.REMOVE_ALL_CONAN_PACKAGES) {
-                                utils.runPython(command: 'conan remove -c "*/*"',
-                                                requirements: "clean_and_reboot_slaves/requirements2.txt")
+                            utils.runPython(command: 'conan remove -c "*"',
+                                            requirements: "clean_and_reboot_slaves/requirements2.txt")
+
+                            //Update remote
+                            utils.runPython(command: 'conan remote update conancenter --url="https://center2.conan.io"',
+                                            requirements: "clean_and_reboot_slaves/requirements2.txt")
                         }
 
                         //Reboot in 60 seconds
