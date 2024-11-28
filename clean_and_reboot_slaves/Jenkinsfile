@@ -40,7 +40,9 @@ pipeline {
                                             requirements: "clean_and_reboot_slaves/requirements2.txt")
 
                             //Update remote
-                            utils.runPython(command: 'conan remote update conancenter --url="https://center2.conan.io"',
+                            utils.runPython(command: 'conan remote remove conancenter',
+                                            requirements: "clean_and_reboot_slaves/requirements2.txt")
+                            utils.runPython(command: 'conan remote add conancenter "https://center2.conan.io"',
                                             requirements: "clean_and_reboot_slaves/requirements2.txt")
                         }
 
